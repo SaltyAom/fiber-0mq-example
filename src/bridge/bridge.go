@@ -1,19 +1,27 @@
 package bridge
 
 import (
+	"fmt"
 	"log"
 	"math"
+	"math/rand"
 
 	zmq "github.com/pebbe/zmq4"
 )
 
-type BridgeMessage struct {
+type Message struct {
 	Content  string
 	Response chan string
 }
 
-func bridgeSend(message BridgeMessage) {
-	socket, err := zmq.NewSocket(zmq.REQ)
+func set_identity(socket *zmq.Socket) {
+	identity := fmt.Sprintf("%04X-%04X", rand.Intn(0x10000), rand.Intn(0x10000))
+	socket.SetIdentity(identity)
+}
+
+func send(message Message) {
+	socket, err := zmq.NewSocket(zmq.DEALER)
+	set_identity(socket)
 
 	if err != nil {
 		log.Fatal(err)
@@ -30,15 +38,15 @@ func bridgeSend(message BridgeMessage) {
 	socket.Close()
 }
 
-func bridge(messages chan BridgeMessage) {
+func bridge(messages chan Message) {
 	for message := range messages {
-		bridgeSend(message)
+		go send(message)
 	}
 }
 
-func CreateBridge() chan BridgeMessage {
-	concurrent := int(math.Pow(2, 24))
-	bridgeQueue := make(chan BridgeMessage, concurrent)
+func CreateBridge() chan Message {
+	concurrent := int(math.Pow(2, 16))
+	bridgeQueue := make(chan Message, concurrent)
 
 	go bridge(bridgeQueue)
 

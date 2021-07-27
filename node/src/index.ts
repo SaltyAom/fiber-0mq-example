@@ -1,4 +1,4 @@
-import { Router, Context } from 'zeromq'
+import { Router } from 'zeromq'
 import PQueue from 'p-queue'
 
 const requestQueue = new PQueue({

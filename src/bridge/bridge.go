@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"time"
 
 	zmq "github.com/pebbe/zmq4"
 )
@@ -12,6 +13,10 @@ import (
 type Message struct {
 	Content  string
 	Response chan string
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
 
 func set_identity(socket *zmq.Socket) {

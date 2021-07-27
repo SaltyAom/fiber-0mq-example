@@ -1,32 +1,20 @@
 import { Router, Context } from 'zeromq'
 import PQueue from 'p-queue'
 
-import { cpus } from 'os'
-
 const requestQueue = new PQueue({
-	concurrency: Math.pow(2, 16)
+	concurrency: 1
 })
 
-const socket = new Router({
-	sendTimeout: 0,
-	context: new Context({
-		blocky: false,
-		ioThreads: cpus().length
-	})
-})
+const socket = new Router()
 
 const channel = 'tcp://0.0.0.0:5556'
-
-const sendRequest = async (response: [string, string]) => {
-	requestQueue.add(async () => {
-		await socket.send(response)
-	})
-}
 
 const handle = async (request: Buffer[]) => {
 	let [id, message] = request.toString().split(',')
 
-	sendRequest([id, Date().toLocaleString()])
+	requestQueue.add(async () => {
+		await socket.send([id, Date().toLocaleString()])
+	})
 }
 
 const main = async () => {
